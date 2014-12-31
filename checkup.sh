@@ -1,8 +1,8 @@
 ##Variable Initialization
 #Variables for checking if my processes filepath and binary is on the server.
-process='vpnserv'
-installPath='/opt/airwatch/vpnd'
-processBinary='/opt/airwatch/vpnd/vpnserv'
+process="vpnserv"
+processPath="/opt/airwatch/vpnd"
+processConfig="/opt/airwatch/vpnd/server.conf"
 hname=$(hostname --fqdn)
 ipadd=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
 
@@ -11,9 +11,9 @@ ipadd=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -
 #Function to check if process is installed.
 function isInstalled()
 {
-if [ -d "/opt/airwatch/vpnd/" ]; then
+if [ -d $processPath ]; then
 Installed=true
-    if [ -f "/opt/airwatch/vpnd/vpnserv" ]; then
+    if [ -f $processConfig ]; then
         Installed=true
     else
         Installed=false
@@ -27,7 +27,7 @@ fi
 #Function to check if process is running.
 function isRunning()
 {
-        if [ "$(pidof vpnserv)" ] 
+        if [ "$(pidof $process)" ] 
 then
     checkV="Running"
 else
@@ -38,14 +38,14 @@ fi
 #Function to check how long process has been running and return process ID.
 function show_start_time()
 {
-        pid=`ps -ef | grep vpnd | grep -v grep | awk '{print $2}'`
+        pid=`ps -ef | grep $process | grep -v grep | awk '{print $2}'`
         user_hz=$(getconf CLK_TCK) #mostly it's 100 on x86/x86_64
         jiffies=$(cat /proc/$pid/stat | cut -d" " -f22)
         #UPTIME=$(grep btime /proc/stat | cut -d" " -f2)  #this is the seconds when booting up
         sys_uptime=$(cat /proc/uptime | cut -d" " -f1)
         last_time=$(( ${sys_uptime%.*} - $jiffies/$user_hz ))
         last_time=$(echo "$last_time/60" | bc)
-        echo "VPND running on process $pid up for $last_time minutes."
+        echo "$process running on process $pid up for $last_time minutes."
 }
 
 #Find information from config file if process is running.
@@ -54,9 +54,9 @@ function ifRunning()
     if [ "$checkV" == "Running" ];
 then
         
-        locationGroup=$(awk '/API server address/{getline; print}' /opt/airwatch/vpnd/server.conf)
-        hostServer=$(awk '/Location group name/{getline; print}' /opt/airwatch/vpnd/server.conf)
-        debugLevel=$(awk '/## 5 - Trace/{getline; print}' /opt/airwatch/vpnd/server.conf)
+        locationGroup=$(awk '/API server address/{getline; print}' $processConfig)
+        hostServer=$(awk '/Location group name/{getline; print}' $processConfig)
+        debugLevel=$(awk '/## 5 - Trace/{getline; print}' $processConfig)
         show_start_time $pid
         echo ""
         echo "$locationGroup"
@@ -65,15 +65,16 @@ then
         echo ""
         checkDebug
 else
-        echo "VPN service is not running"
+        echo "$process service is not running"
         echo ""
-        echo "Starting VPND service..."
+        echo "Starting $process service..."
         echo ""
         startService
 
 fi
 }
 
+##Fucntion to check the debug level of my server.
 function checkDebug()
 {
     log_level=$(sed -n -e '/log_level/p' /opt/airwatch/vpnd/server.conf)
@@ -92,11 +93,13 @@ function checkDebug()
 
 }
 
+##Fucntion to set the debug level of my server.
 function setLogDebug()
 {
-    sudo stop vpnd > /dev/null
+    sudo stop $process > /dev/null
+    ##Context specific check for my environments
     sudo sed -i '/log_level/c\log_level 4' /opt/airwatch/vpnd/server.conf
-    sudo start vpnd > /dev/null
+    sudo start $process > /dev/null
     echo ""
     echo "Service restarted..."
     echo ""
@@ -105,7 +108,7 @@ function setLogDebug()
 function startService()
 {
     setLogDebug
-    sudo tail /var/log/messages | grep vpnd
+    sudo tail /var/log/messages | grep $process
 }
 
 
@@ -128,7 +131,7 @@ ifRunning
 
 else
 
-    echo "VPN Server does not appear to be installed..."
+    echo "$process Server does not appear to be installed..."
     echo ""
 
 fi
