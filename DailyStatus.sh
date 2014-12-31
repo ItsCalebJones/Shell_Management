@@ -1,22 +1,21 @@
-##WORKING REMOTELY EXECUTING SCRIPT
+##Variable Initialization
 today=$(date +%m-%d-%Y)
-xemails="cjones@air-watch.com"
+xemails="youremail@email.com"
 
-# rsync -av ~/Documents/Development/Scripts/checkup.sh cjones@qavpn.airwatchqa.com:~/checkup.sh
-# echo ""
-# echo ""
-# ssh -t cjones@qavpn.airwatchqa.com 'sudo ./checkup.sh' >> ~/Desktop/DailyReport_$today.txt
-
-#List of Servers
-host1="qavpn.airwatchqa.com"
-host2="10.43.70.183"
+##Point this logfile to somewhere on your machine that makes sense.
 logfile=~/Desktop/DailyReport_$today.txt
 
-echo ""
+##Start logging to that file
 echo "Beginning remote connections..." >> $logfile
 echo "" >>logfile
 
-for servers in $(cat hostnames.txt); do
+##Point to a file with a list of Servers in the for loop.
+#
+# Example file below, just one line after the other list of server addresses or IPs.
+#10.0.0.1
+#10.0.0.2
+#calebjones.me
+for servers in $(cat ~/Documents/Development/Scripts/hostnames.txt); do
 	echo "Starting connection to $servers" >> $logfile
     (rsync -av ~/Documents/Development/Scripts/checkup.sh cjones@$servers:~/checkup.sh > /dev/null
     echo""
@@ -24,13 +23,14 @@ for servers in $(cat hostnames.txt); do
     echo ""
 done
 
-echo "Caleb Jones" >> $logfile
-echo "App Tunnel – Quality Assurance" >> $logfile
-echo "O | 404.902.4869" >> $logfile
-echo "C | 770.634.6335" >> $logfile
-echo "cjones@air-watch.com" >> $logfile
+##Formatting bottom of logfile to make it 'pretty' for an email.
+echo "John Doe" >> $logfile
+echo "Signature Title" >> $logfile
+echo "O | 404.404.4040" >> $logfile
+echo "C | 505.505.5050" >> $logfile
+echo "cjones@calebjones.me" >> $logfile
 echo "This communication is confidential and is intended to be privileged pursuant to applicable law. If you are not a designated recipient of this message, please do not read, copy, use or disclose this message or its attachments. Notify the sender by replying to this message and delete or destroy all copies of this message and attachments in all media. Thank you." >> $logfile
 
-
+##Uses local machine mail account to send email using input from logfile then opens log file for local viewing.
 mail -s "TESTING| Server Status - $today" $xemails < $logfile
 open $logfile

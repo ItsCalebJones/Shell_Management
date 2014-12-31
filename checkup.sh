@@ -1,6 +1,14 @@
+##Variable Initialization
+#Variables for checking if my processes filepath and binary is on the server.
+process='vpnserv'
+installPath='/opt/airwatch/vpnd'
+processBinary='/opt/airwatch/vpnd/vpnserv'
+hname=$(hostname --fqdn)
+ipadd=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
+
 ##Define Functions
 
-#Function to check if /etc/opt/airwatch/vpnd/vpnserv exist
+#Function to check if process is installed.
 function isInstalled()
 {
 if [ -d "/opt/airwatch/vpnd/" ]; then
@@ -16,7 +24,7 @@ else
 fi
 }
 
-#Function to check if vpnserv is running
+#Function to check if process is running.
 function isRunning()
 {
         if [ "$(pidof vpnserv)" ] 
@@ -27,7 +35,7 @@ else
 fi
 }
 
-#Function to check how long vpnserv has been running and return process ID.
+#Function to check how long process has been running and return process ID.
 function show_start_time()
 {
         pid=`ps -ef | grep vpnd | grep -v grep | awk '{print $2}'`
@@ -40,7 +48,7 @@ function show_start_time()
         echo "VPND running on process $pid up for $last_time minutes."
 }
 
-#Find Location Group and AirWatch console hostname if server is running.
+#Find information from config file if process is running.
 function ifRunning()
 {
     if [ "$checkV" == "Running" ];
@@ -101,16 +109,7 @@ function startService()
 }
 
 
-##-Main Thread-#
-#--------------#
-#--------------#
-#--------------#
-##            ##
-
-
-
-hname=$(hostname --fqdn)
-ipadd=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
+###-Main Thread-###
 
 ##Prints name and IP of the Server
 echo "#-------------------------------#"
@@ -125,7 +124,6 @@ if [ "$Installed" = true ]; then
 
 #Calls isRunning funciton to see if vpnserver is running.
 isRunning
-
 ifRunning
 
 else
